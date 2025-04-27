@@ -1,0 +1,47 @@
+name: AWS Workflow with Terraform & S3 Upload
+
+on:
+   push:
+     branches:
+       - main
+        workflow-dispatch:
+
+ 
+
+env:
+  AWS_REGION: "ap-south-1"
+
+permissions:
+  id-token: write   # Required for OIDC JWT retrieval
+  contents: read     # Required for repository checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::781346609886:role/aws-git-oibc
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        id: terraform_apply
+        run: terraform apply -auto-approve -no-color
+
+      
